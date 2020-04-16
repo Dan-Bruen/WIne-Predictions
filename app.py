@@ -1,133 +1,163 @@
-import os
+from flask import Flask, render_template, url_for, request, redirect
+from flask_bootstrap import Bootstrap 
+import pandas as pd 
+import numpy as np 
+# import matplotlib.pyplot as plt
+import pickle
 
-import pandas as pd
-import numpy as np
-
-
-from flask import Flask, render_template, redirect, jsonify
-from flask_pymongo import PyMongo
-
+# ML Packages
+# from sklearn.externals import joblib
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
+Bootstrap(app)
 
 
-# Use PyMongo to establish Mongo connection
-mongo = PyMongo(app, uri="mongodb://localhost:27017/wine_reviews")
-
-# insert local data file into Mongodb
-# "Refereces/Datasets/winemag-data-130k-vs.json"
-# refer to MongoDB homework on how to insert json into mongodb
-
-@app.route("/")
+@app.route('/')
 def index():
-    """Return the homepage."""
-    return render_template("index.html")
+    countrydropdown = ['France', 'US', 'Argentina', 'Italy', 'Chile', 'Germany',
+       'Portugal', 'South Africa', 'Hungary', 'Australia', 'Spain',
+       'Austria', 'New Zealand', 'Romania', 'Israel', 'Turkey', 'Greece',
+       'Slovenia', 'Croatia', 'Georgia', 'England', 'Canada', 'Moldova',
+       'Czech Republic', 'Bulgaria', 'Uruguay', 'Morocco', 'Mexico',
+       'Lebanon', 'Brazil', 'Serbia', 'Switzerland', 'India',
+       'Luxembourg', 'Cyprus', 'Macedonia']
+    varietydropdown = ['Pinot Gris', 'Cabernet Sauvignon', 'Gewürztraminer', 'Chardonnay',
+       'Malbec', 'Merlot', 'Pinot Noir', 'Gamay', 'Red Blend', 'Inzolia', 'Riesling', 'Sauvignon Blanc', 'Monica',
+       'Bordeaux-style White Blend', 'Grillo', 'Syrah', 'Portuguese Red', 'Sangiovese', 'Tannat-Cabernet', 'Cabernet Franc', 'White Blend',
+       'G-S-M', 'Zinfandel', 'Rhône-style Red Blend', 'Fumé Blanc', 'Furmint', 'Pinot Bianco', 'Syrah-Viognier', 'Shiraz', 'Rosé',
+       'Tempranillo', 'Sparkling Blend', 'Grüner Veltliner', 'Grenache Blanc', 'Nebbiolo', 'Cortese', 'Champagne Blend',
+       'Pinot Blanc', 'Glera', 'Pinot Grigio', 'Bonarda', 'Aglianico', 'Bordeaux-style Red Blend', 'Silvaner', 'Colombard',
+       'Tempranillo Blend', 'Portuguese White', 'Tinta Miúda', 'Corvina, Rondinella, Molinara', "Nero d'Avola", 'Insolia',
+       'Papaskarasi', 'Tannat-Syrah', 'Petite Sirah', 'Pinot Nero', 'Sherry', 'Greco', 'Viura', 'Viognier', 'Sauvignon', 'Sousão',
+       'Port', 'Albariño', 'Vermentino', 'Turbiana', 'Barbera', 'Montepulciano', 'Agiorgitiko', 'Muscat', 'Malagousia',
+       'Assyrtiko', 'Chenin Blanc', 'Sangiovese Grosso', 'Monastrell', 'Traminette', 'Melon', 'Sagrantino', 'Cesanese',
+       'Touriga Nacional', 'Rosato', 'Rotgipfler', 'Tinta de Toro', 'Verdejo', 'Xarel-lo', 'Carmenère', 'Grenache', 'Meritage',
+       'Vernaccia', 'Arinto', 'Friulano', 'Ribolla Gialla', 'Falanghina', 'Plavac Mali', 'Verdejo-Viura', 'Sauvignon Blanc-Semillon',
+       'Saperavi', 'Altesse', 'Torrontés', 'Provence white blend', 'Alvarinho', 'Tinto Fino', 'Moschofilero', 'Cabernet Franc-Merlot',
+       'Torbato', 'Garnacha', 'Syrah-Petit Verdot', 'Dolcetto', 'Pedro Ximénez', 'Verdicchio', 'Pinot Meunier', 'Pinotage',
+       'Mourvèdre', 'Lagrein', 'Rosado', 'Malbec-Syrah', 'Garnacha Blanca', 'Feteascǎ Regalǎ', 'Cinsault',
+       'Tempranillo-Cabernet Sauvignon', 'Cabernet Sauvignon-Tempranillo', 'Carignan', 'Cabernet-Syrah', 'Syrah-Grenache', 'Gamay Noir',
+       'Feteasca Neagra', 'Rhône-style White Blend', 'Charbono', 'Garganega', 'Valdiguié', 'Vidal Blanc', 'Zibibbo', 'Mencía',
+       'Uva di Troia', 'Petit Verdot', 'Nerello Mascalese', 'Graciano', 'Chardonnay-Sauvignon Blanc', 'Marsanne', 'Spätburgunder',
+       'Petit Manseng', 'Blaufränkisch', 'Neuburger', 'Roter Veltliner', 'Syrah-Petite Sirah', 'Trincadeira', 'Rkatsiteli',
+       'Austrian white blend', 'Syrah-Cabernet Sauvignon', 'Negroamaro', 'Lemberger', 'Aligoté', 'Xinomavro', 'Zweigelt',
+       'Malvasia Istriana', 'Picpoul', 'Moscato', 'Arneis', 'Gelber Muskateller', 'Touriga Franca', 'Roussanne-Viognier', 
+       'Malbec-Merlot', 'Gaglioppo', 'Ruché', 'Roussanne', 'Tannat', 'Dornfelder', 'Kalecik Karasi', 'Castelão',
+       'Gros and Petit Manseng', 'Carricante', 'Carignane', 'Nerello Cappuccio', 'Verduzzo', 'Portuguese Sparkling', 'Fiano',
+       'Portuguese Rosé', 'Godello', 'Primitivo', 'Lambrusco di Sorbara', 'Provence red blend', 'Cabernet Sauvignon-Syrah',
+       "Cesanese d'Affile", 'Debit', 'Cabernet', 'Perricone', 'Posip', 'Syrah-Mourvèdre', 'Grenache-Mourvèdre', 'Weissburgunder',
+       'Nero di Troia', 'Pinot-Chardonnay', 'Prosecco', 'Carmenère-Cabernet Sauvignon', 'Muskat Ottonel', 'Timorasso',
+       'Pigato', 'Viognier-Gewürztraminer', 'Bobal', 'Malbec-Petit Verdot', 'Colombard-Ugni Blanc', 'St. Laurent',
+       'Chardonnay-Semillon', 'Carignan-Grenache','Shiraz-Cabernet Sauvignon', 'Carignano', 'Marawi',
+       'Chardonnay-Pinot Blanc', 'Cabernet Blend', 'Alicante Bouschet', 'Tinta Cao', 'Austrian Red Blend', 'Müller-Thurgau', 'Groppello',
+       'Petite Verdot', 'Grenache-Shiraz', 'Traminer', 'Assyrtico', 'Kerner', 'Treixadura', 'Cabernet Sauvignon-Merlot', 'Muscatel',
+       'Palomino', 'Orange Muscat', 'Tocai Friulano', 'Lambrusco', 'Sciaccerellu', 'Jacquère', 'Touriga Nacional-Cabernet Sauvignon',
+       'Cabernet Sauvignon-Carmenère', 'Zierfandler', 'Touriga', 'Gros Manseng', 'Chardonnay-Viognier', 'Tempranillo-Shiraz',
+       'Monastrell-Syrah', 'Seyval Blanc', 'Casavecchia', 'Trousseau Gris', 'Cabernet Sauvignon-Merlot-Shiraz', 'Durella',
+       'Sangiovese-Syrah', 'Fer Servadou', 'Negrette', 'Mission', 'Colombard-Sauvignon Blanc', 'Syrah-Merlot', 'Lambrusco Salamino',
+       'Lambrusco Grasparossa', 'Cannonau', 'Pecorino', 'Passerina', 'Moscatel', 'Malbec-Tannat', 'Grecanico', 'Kisi',
+       'Pallagrello Nero', 'Loureiro', 'Verdelho', 'Refosco', 'Symphony', 'Teroldego', 'Cabernet Sauvignon-Sangiovese', 'Tamjanika',
+       'Shiraz-Cabernet', 'Shiraz-Grenache', 'Tokay', 'Syrah-Cabernet Franc', 'Nosiola', 'Schiava',
+       'Merlot-Cabernet Sauvignon', 'Muscat Canelli', 'Raboso', 'Viosinho', 'Sylvaner', 'Maria Gomes', 'Malbec-Cabernet Sauvignon',
+       'Erbaluce', 'Grenache-Carignan', 'Chenin Blanc-Viognier', 'Muskat', 'Pansa Blanca', 'Tannat-Cabernet Franc', 'Pinot Noir-Gamay',
+       'Grenache Blend', 'Prieto Picudo', 'Corvina', 'Souzao', 'Sémillon', 'Antão Vaz', 'Counoise', 'Alfrocheiro', 'Brachetto', 'Portuguiser',
+       'Listán Negro', 'Tinto del Pais', 'Grolleau', 'Grauburgunder', 'Kekfrankos', 'Elbling', 'Alsace white blend', 'Pallagrello',
+       'Trebbiano', 'Encruzado', 'Carignan-Syrah', 'Pinot Auxerrois', 'Carmenère-Syrah', 'Tinta Fina', 'Tempranillo-Garnacha',
+       'Malvasia', 'Malvasia Nera', 'Other', 'Rieslaner', 'Chenin Blanc-Chardonnay', 'Emir', 'Merlot-Cabernet', 'Albarossa',
+       'Black Muscat', 'Frappato', 'Baco Noir', 'Albana', 'Vidal', 'Aragonez', 'Uvalino', 'Sangiovese Cabernet', 'Garnacha-Syrah',
+       'Cabernet Franc-Malbec', 'Bovale', 'Cabernet Sauvignon-Malbec', 'Hondarrabi Zuri', 'Cabernet Sauvignon-Shiraz', 'Baga',
+       'Garnacha-Tempranillo', 'Coda di Volpe', 'Vignoles', 'Macabeo', 'Trepat', 'Aragonês', 'Siria', 'Chambourcin', 'Welschriesling',
+       'Robola']
+    return render_template('index.html', countrydropdown = countrydropdown, varietydropdown = varietydropdown)
 
-@app.route("/data")
-def load_data():
-    # write a statement that finds all the items in the db and sets it to a variable
-    wine_reviews = list(mongo.db.wineJson.find({"variety":"Pinot Noir"}))
-    wine_counts = mongo.db.wineJson.count_documents({"variety":"Pinot Noir"})
-    # render an index.html template and pass it the data you retrieved from the database
-    # return render_template("index.html", wine_data = wine_reviews)
-    return f"<p>{wine_reviews}</p> <p>{wine_counts}</p>"
+@app.route('/predict', methods=['POST'])
+def predict():
+    # df1 = pd.read_csv("wine-reviews/winemag-data-130k-v2.csv")
+    # parsed_data = df1[df1.duplicated('description', keep=False)].copy()
+    # parsed_data.dropna(subset=['description', 'points', 'price', 'country'], inplace=True)
+    # df2 = parsed_data[['description','points','price', 'country']]
 
+    # 1 -> Points 80 to 84 (Under Average wines)
 
-@app.route("/variety")
-def variety():
-    """Return a list of grape names."""
-    wine_grapes = mongo.db.wineJson.distinct("variety")
-    # Return a list of the column names (sample names)
-    return jsonify(wine_grapes)
+    # 2 -> Points 84 to 88 (Average wines)
 
-# @app.route("/data")
-# def load_data():
-#     # write a statement that finds all the items in the db and sets it to a variable
-#     wine_reviews = list(mongo.db.wineJson.find({"variety":"Pinot Noir"}))
-#     wine_counts = mongo.db.wineJson.count_documents({"variety":"Pinot Noir"})
-#     # render an index.html template and pass it the data you retrieved from the database
-#     # return render_template("index.html", wine_data = wine_reviews)
-#     return f"<p>{wine_reviews}</p> <p>{wine_counts}</p>"
+    # 3 -> Points 88 to 92 (Good wines)
 
-@app.route("/samples/<sample>")
-def samples(sample):
-    wine_reviews = list(mongo.db.wineJson.find({"variety":sample},{"_id":0}).limit(500))
+    # 4 -> Points 92 to 96 (Very Good wines)
 
+    # 5 -> Points 96 to 100 (Excellent wines)
 
-    return jsonify(wine_reviews)
+    #Transform method taking points as param
+    def transform_points_simplified(points):
+        if points < 84:
+            return 1
+        elif points >= 84 and points < 88:
+            return 2 
+        elif points >= 88 and points < 92:
+            return 3 
+        elif points >= 92 and points < 96:
+            return 4 
+        else:
+            return 5
 
-    # """Return `otu_ids`, `otu_labels`,and `sample_values`."""
-    # stmt = db.session.query(Samples).statement
-    # df = pd.read_sql_query(stmt, db.session.bind)
+    #Applying transform method and assigning result to new column "points_simplified"
+    # df2 = df2.assign(points_simplified = df2['points'].apply(transform_points_simplified))
+ 	# # Features and Labels
+    # df2['finaltextinput'] = df2['description'] + ' ' + df2['country']
+    # def lower_all(input_string):
+    #     return input_string.lower()
 
-    # # Filter the data based on the sample number and
-    # # only keep rows with values above 1
-    # sample_data = df.loc[df[sample] > 1, ["otu_id", "otu_label", sample]]
+    # df2["finaltextinput"] = df2["finaltextinput"].apply(lower_all)
 
-    # # Sort by sample
-    # sample_data.sort_values(by=sample, ascending=False, inplace=True)
-
-    # # Format the data to send as json
-    # data = {
-    #     "otu_ids": sample_data.otu_id.values.tolist(),
-    #     "sample_values": sample_data[sample].values.tolist(),
-    #     "otu_labels": sample_data.otu_label.tolist(),
-    # }
-    # return jsonify(data)
-
-
-
-
-
-
-
-
-###########################
-
-
-
-
-
-  # /sample is needed for wordcloud + bubble chart
-    # only return the json data filtered by the grape
-# import json
-
-# input_json = """
-# [
-#     {
-#         "type": "1",
-#         "name": "name 1"
-#     },
-#     {
-#         "type": "2",
-#         "name": "name 2"
-#     },
-#     {
-#         "type": "1",
-#         "name": "name 3"
-#     }
-# ]"""
-
-# # Transform json input to python objects
-# input_dict = json.loads(input_json)
-
-# # Filter python objects with list comprehensions
-# output_dict = [x for x in input_dict if x['type'] == '1']
-
-# # Transform python object back into json
-# output_json = json.dumps(output_dict)
-
-# # Show json
-# print output_json
-
-@app.route("/metadata/<sample>")
-def sample_metadata1(sample):
-    #metadata will be the first sample of the wine
-    variety_chosen = dict(mongo.db.wineJson.find({"variety":sample},{"_id":0})[0])
+    # X = df2['finaltextinput']
+    # y = df2['points_simplified']
+    # X2 = df2['price']
     
-    return jsonify(variety_chosen)
+    # Vectorization
+    # vectorizer = CountVectorizer()
+    # vectorizer.fit(X)
+    # X = vectorizer.transform(X)
+    # pd.DataFrame.sparse.from_spmatrix(X)
+    # X2.reset_index(drop = True, inplace = True)
+    # Z =pd.DataFrame.sparse.from_spmatrix(X).join(X2)
+	
+    with open('winevect_rfc_model.pickle', 'rb') as handle:
+        loaded_vec = pickle.load(handle)
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
 
+ 	# # Loading our ML Model
+    # RandomForestClassifier_model = open("models/wine_rfc_model.pickle","rb")
+    # rfc = joblib.load(RandomForestClassifier_model)
+
+    with open('wine_rfc_model.pickle', 'rb') as handle:
+        rfc = pickle.load(handle)
+
+
+ 	# Receives the input query from form
+    if request.method == 'POST':
+        namequery = request.form['namequery']
+        countryquery = request.form['country']
+        namequery = namequery + " " + countryquery
+        data = [namequery]
+        X_example = loaded_vec.transform(data)
+        input_price = request.form['price']
+        if not( isinstance(input_price, float) or isinstance(input_price, int)):
+            print("expected a number")
+        data_price = [input_price]
+
+        X2_example = pd.Series(input_price, name = "price")
+        pd.DataFrame.sparse.from_spmatrix(X_example)
+        X2_example.reset_index(drop = True, inplace = True)
+        Z_example =pd.DataFrame.sparse.from_spmatrix(X_example).join(X2_example)
+# 		vect = cv.transform(data).toarray()
+# 		my_prediction = clf.predict(vect)
+        my_prediction = rfc.predict(Z_example)
+    return render_template('results.html',prediction = my_prediction,name = namequery.upper())
+
+
+if __name__ == '__main__':
+	app.run(debug=True)

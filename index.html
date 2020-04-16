@@ -1,65 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "bootstrap/base.html" %}
+{% block content %}
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Flask Plotlyjs Example</title>
-  <link rel="stylesheet" href="static/css/bootstrap.min_lux.css">
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</head>
+<div class="container">
+  <div class="jumbotron" style="background-color:#1daeff !important;">
+    <h2 tyle="color:#000000;">Wine Rating Predictor</h2>      
+      <p>Using Machine Learning to predict Wine Ratings</p>
+    
+    </div>        
 
-<body>
+</div>
+    
+<div class="">
+    <form method="POST" action="{{ url_for('predict')}}">
+      <label for="namequery">Describe your wine:</label>
+      <input type="text" name="namequery">
+      <label for="country">Choose a country:</label>
+      <select id="country" name="country">
+        {% for country in countrydropdown %}
+        <option value="{{country}}" selected>{{country}}</option>"
+        {% endfor %}
+      </select>
+      <label for="grape(s)">Choose a variety of grape:</label>
+      <select id="variety" name="variety">
+        {% for variety in varietydropdown %}
+        <option value="{{variety}}" selected>{{variety}}</option>"
+        {% endfor %}
+      </select>
+      <label for="price">Price:</label>
+      <input type="text" name="price">
+			<button type="submit" class="btn btn-primary">Predict</button>
+    </form>
+</div>
 
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12 jumbotron text-center">
-        <h1>Grape Variety Dashboard</h1>
-        <p>Use the interactive charts below to explore different grapes variety!</p>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-6">
-        <div class="list-group">
-          <div class="list-group-item list-group-item-action flex-column align-items-start active">
-            <h5>SELECT Grape Variety:</h5>
-            <select class="form-group custom-select" id="selDataset" onchange="optionChanged(this.value)"></select>
-          </div>
-          <div class="list-group-item list-group-item-action flex-column align-items-start">
-            <div class="d-flex w-100 justify-content-between">
-              <h3 class="mb-1">Sample Wine Review with Selected Grape</h3>
-            </div>
-            <div id="sample-metadata" class="panel-body"></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card bg-secondary mb-3">
-          <div id="pie"></div>
-        </div> 
-      </div>
-    </div>
-    <div class="row my-4">
-      <div class="col-md-12">
-        <div class="card bg-secondary mb-3">
-          <div id="bubble"></div>
-        </div>
-      </div>
-  </div>
+    
+{% endblock %}
 
-  <!-- <script src="https://cdn.plot.ly/plotly-1.31.2.min.js"></script> -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.5.0/d3.js"></script>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="{{ url_for('static', filename='js/bonus.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-  <!-- <script src="{{ url_for('static', filename='js/require.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/d3.layout.cloud.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/node.js') }}"></script> -->
-
-</body>
-
-</html>
-
+{% block styles %}
+{{super()}} <!-- Allows Javascripts and other styles to be inclusive in bootstrap -->
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='css/styles.css')}}">
+{% endblock %}
