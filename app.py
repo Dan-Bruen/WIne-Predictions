@@ -1,133 +1,109 @@
-import os
+from flask import Flask,render_template,url_for,request
+from flask_bootstrap import Bootstrap 
+import pandas as pd 
+import numpy as np 
+# import matplotlib.pyplot as plt
+import pickle
 
-import pandas as pd
-import numpy as np
-
-
-from flask import Flask, render_template, redirect, jsonify
-from flask_pymongo import PyMongo
-
+# ML Packages
+# from sklearn.externals import joblib
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
+Bootstrap(app)
 
 
-# Use PyMongo to establish Mongo connection
-mongo = PyMongo(app, uri="mongodb://localhost:27017/wine_reviews")
-
-# insert local data file into Mongodb
-# "Refereces/Datasets/winemag-data-130k-vs.json"
-# refer to MongoDB homework on how to insert json into mongodb
-
-@app.route("/")
+@app.route('/')
 def index():
-    """Return the homepage."""
-    return render_template("index.html")
+	return render_template('index.html')
 
-@app.route("/data")
-def load_data():
-    # write a statement that finds all the items in the db and sets it to a variable
-    wine_reviews = list(mongo.db.wineJson.find({"variety":"Pinot Noir"}))
-    wine_counts = mongo.db.wineJson.count_documents({"variety":"Pinot Noir"})
-    # render an index.html template and pass it the data you retrieved from the database
-    # return render_template("index.html", wine_data = wine_reviews)
-    return f"<p>{wine_reviews}</p> <p>{wine_counts}</p>"
+@app.route('/predict', methods=['POST'])
+def predict():
+    # df1 = pd.read_csv("wine-reviews/winemag-data-130k-v2.csv")
+    # parsed_data = df1[df1.duplicated('description', keep=False)].copy()
+    # parsed_data.dropna(subset=['description', 'points', 'price', 'country'], inplace=True)
+    # df2 = parsed_data[['description','points','price', 'country']]
 
+    # 1 -> Points 80 to 84 (Under Average wines)
 
-@app.route("/variety")
-def variety():
-    """Return a list of grape names."""
-    wine_grapes = mongo.db.wineJson.distinct("variety")
-    # Return a list of the column names (sample names)
-    return jsonify(wine_grapes)
+    # 2 -> Points 84 to 88 (Average wines)
 
-# @app.route("/data")
-# def load_data():
-#     # write a statement that finds all the items in the db and sets it to a variable
-#     wine_reviews = list(mongo.db.wineJson.find({"variety":"Pinot Noir"}))
-#     wine_counts = mongo.db.wineJson.count_documents({"variety":"Pinot Noir"})
-#     # render an index.html template and pass it the data you retrieved from the database
-#     # return render_template("index.html", wine_data = wine_reviews)
-#     return f"<p>{wine_reviews}</p> <p>{wine_counts}</p>"
+    # 3 -> Points 88 to 92 (Good wines)
 
-@app.route("/samples/<sample>")
-def samples(sample):
-    wine_reviews = list(mongo.db.wineJson.find({"variety":sample},{"_id":0}).limit(500))
+    # 4 -> Points 92 to 96 (Very Good wines)
 
+    # 5 -> Points 96 to 100 (Excellent wines)
 
-    return jsonify(wine_reviews)
+    #Transform method taking points as param
+    def transform_points_simplified(points):
+        if points < 84:
+            return 1
+        elif points >= 84 and points < 88:
+            return 2 
+        elif points >= 88 and points < 92:
+            return 3 
+        elif points >= 92 and points < 96:
+            return 4 
+        else:
+            return 5
 
-    # """Return `otu_ids`, `otu_labels`,and `sample_values`."""
-    # stmt = db.session.query(Samples).statement
-    # df = pd.read_sql_query(stmt, db.session.bind)
+    #Applying transform method and assigning result to new column "points_simplified"
+    # df2 = df2.assign(points_simplified = df2['points'].apply(transform_points_simplified))
+ 	# # Features and Labels
+    # df2['finaltextinput'] = df2['description'] + ' ' + df2['country']
+    # def lower_all(input_string):
+    #     return input_string.lower()
 
-    # # Filter the data based on the sample number and
-    # # only keep rows with values above 1
-    # sample_data = df.loc[df[sample] > 1, ["otu_id", "otu_label", sample]]
+    # df2["finaltextinput"] = df2["finaltextinput"].apply(lower_all)
 
-    # # Sort by sample
-    # sample_data.sort_values(by=sample, ascending=False, inplace=True)
-
-    # # Format the data to send as json
-    # data = {
-    #     "otu_ids": sample_data.otu_id.values.tolist(),
-    #     "sample_values": sample_data[sample].values.tolist(),
-    #     "otu_labels": sample_data.otu_label.tolist(),
-    # }
-    # return jsonify(data)
-
-
-
-
-
-
-
-
-###########################
-
-
-
-
-
-  # /sample is needed for wordcloud + bubble chart
-    # only return the json data filtered by the grape
-# import json
-
-# input_json = """
-# [
-#     {
-#         "type": "1",
-#         "name": "name 1"
-#     },
-#     {
-#         "type": "2",
-#         "name": "name 2"
-#     },
-#     {
-#         "type": "1",
-#         "name": "name 3"
-#     }
-# ]"""
-
-# # Transform json input to python objects
-# input_dict = json.loads(input_json)
-
-# # Filter python objects with list comprehensions
-# output_dict = [x for x in input_dict if x['type'] == '1']
-
-# # Transform python object back into json
-# output_json = json.dumps(output_dict)
-
-# # Show json
-# print output_json
-
-@app.route("/metadata/<sample>")
-def sample_metadata1(sample):
-    #metadata will be the first sample of the wine
-    variety_chosen = dict(mongo.db.wineJson.find({"variety":sample},{"_id":0})[0])
+    # X = df2['finaltextinput']
+    # y = df2['points_simplified']
+    # X2 = df2['price']
     
-    return jsonify(variety_chosen)
+    # Vectorization
+    # vectorizer = CountVectorizer()
+    # vectorizer.fit(X)
+    # X = vectorizer.transform(X)
+    # pd.DataFrame.sparse.from_spmatrix(X)
+    # X2.reset_index(drop = True, inplace = True)
+    # Z =pd.DataFrame.sparse.from_spmatrix(X).join(X2)
+	
+    with open('models/winevect_model.pickle', 'rb') as handle:
+        loaded_vec = pickle.load(handle)
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
 
+ 	# # Loading our ML Model
+    # RandomForestClassifier_model = open("models/wine_rfc_model.pickle","rb")
+    # rfc = joblib.load(RandomForestClassifier_model)
+
+    with open('models/wine_rfc_model.pickle', 'rb') as handle:
+        rfc = pickle.load(handle)
+
+
+ 	# Receives the input query from form
+    if request.method == 'POST':
+        namequery = request.form['namequery']
+        countryquery = request.form['country']
+        namequery = namequery + " " + countryquery
+        data = [namequery]
+        X_example = loaded_vec.transform(data)
+        input_price = request.form['price']
+        if not( isinstance(input_price, float) or isinstance(input_price, int)):
+            print("expected a number")
+        data_price = [input_price]
+
+        X2_example = pd.Series(input_price, name = "price")
+        pd.DataFrame.sparse.from_spmatrix(X_example)
+        X2_example.reset_index(drop = True, inplace = True)
+        Z_example =pd.DataFrame.sparse.from_spmatrix(X_example).join(X2_example)
+# 		vect = cv.transform(data).toarray()
+# 		my_prediction = clf.predict(vect)
+        my_prediction = rfc.predict(Z_example)
+    return render_template('results.html',prediction = my_prediction,name = namequery.upper())
+
+
+if __name__ == '__main__':
+	app.run(debug=True)
