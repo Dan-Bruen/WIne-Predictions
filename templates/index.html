@@ -1,0 +1,54 @@
+{% extends "bootstrap/base.html" %}
+{% block content %}
+
+<div class="container">
+  <div class="jumbotron" style="background-color:#1daeff !important;">
+    <h2 tyle="color:#000000;">Wine Rating Predictor</h2>      
+      <p>Using Machine Learning to predict Wine Ratings</p>
+    
+    </div>        
+
+</div>
+    
+<div class="">
+    <form method="POST" action="{{ url_for('predict')}}">
+      <input type="text" name="namequery">
+      <!-- <input type="text" name="country"> -->
+      <label for="country">Choose a country:</label>
+      <select id="country" name="country">
+        <option value='france'>France</option>
+        <option value="us">USA</option>
+        <option value="argentina">Argentina</option>
+        <option value="italy">Italy</option>
+        <option value="chile">Chile</option>
+        <option value="germany">Germany</option>
+        <option value="portugal">Portugal</option>
+        <option value="south africa">South Africa</option>
+        <option value="hungary">Hungary</option>
+        <option value="australia">Australia</option>
+        <option value="spain">Spain</option>
+        <option value="austria">Austria</option>
+        <option value="new zealand">New Zealand</option>
+        <option value="romania">Romania</option>
+        <option value="israel">Israel</option>
+        <option value="turkey">Turkey</option>
+        <option value="greece">Greece</option>
+        <option value="slovenia">Slovenia</option>
+        <option value="england">England</option>
+        <option value="morocco">Morocco</option>
+        <option value="switzerland">Switzerland</option>
+        <option value="brazil">Brazil</option>
+      </select>
+      <input type="text" name="price">
+			<button type="submit" class="btn btn-primary">Predict</button>
+    </form>
+</div>
+
+    
+{% endblock %}
+
+{% block styles %}
+{{super()}} <!-- Allows Javascripts and other styles to be inclusive in bootstrap -->
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='css/styles.css')}}">
+{% endblock %}
