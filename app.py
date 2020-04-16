@@ -17,7 +17,14 @@ Bootstrap(app)
 
 @app.route('/')
 def index():
-	return render_template('index.html')
+    countrydropdown = ['France', 'US', 'Argentina', 'Italy', 'Chile', 'Germany',
+       'Portugal', 'South Africa', 'Hungary', 'Australia', 'Spain',
+       'Austria', 'New Zealand', 'Romania', 'Israel', 'Turkey', 'Greece',
+       'Slovenia', 'Croatia', 'Georgia', 'England', 'Canada', 'Moldova',
+       'Czech Republic', 'Bulgaria', 'Uruguay', 'Morocco', 'Mexico',
+       'Lebanon', 'Brazil', 'Serbia', 'Switzerland', 'India',
+       'Luxembourg', 'Cyprus', 'Macedonia']
+    return render_template('index.html', countrydropdown = countrydropdown)
 
 @app.route('/predict', methods=['POST'])
 def predict():
