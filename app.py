@@ -124,7 +124,7 @@ def predict():
     # X2.reset_index(drop = True, inplace = True)
     # Z =pd.DataFrame.sparse.from_spmatrix(X).join(X2)
 	
-    with open('winevect_rfc_model.pickle', 'rb') as handle:
+    with open('models/winevect_rfc_model.pickle', 'rb') as handle:
         loaded_vec = pickle.load(handle)
 
 
@@ -133,7 +133,7 @@ def predict():
     # RandomForestClassifier_model = open("models/wine_rfc_model.pickle","rb")
     # rfc = joblib.load(RandomForestClassifier_model)
 
-    with open('wine_rfc_model.pickle', 'rb') as handle:
+    with open('models/wine_rfc_model.pickle', 'rb') as handle:
         rfc = pickle.load(handle)
 
 
@@ -141,7 +141,8 @@ def predict():
     if request.method == 'POST':
         namequery = request.form['namequery']
         countryquery = request.form['country']
-        namequery = namequery + " " + countryquery
+        varietyquery = request.form['variety']
+        namequery = namequery + " " + countryquery + " " + varietyquery
         data = [namequery]
         X_example = loaded_vec.transform(data)
         input_price = request.form['price']
