@@ -1,0 +1,36 @@
+body{
+	font:15px/1.5 Arial, Helvetica,sans-serif;
+	padding: 0px;
+	background-color:#f4f3f3;
+	align-content: center;
+	background-color: #696969;
+	color: white;
+}
+
+form{
+	text-align: center;
+	color: white;
+}
+
+input{
+	color: black
+}
+
+select{
+	color:black
+}
+
+
+
+.jumbotron{ 
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	font-size: large;
+	font-weight: bold;
+	color: white;
+}
+
+.card-body{
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	font-weight: bold;
+	color: white;
+}
