@@ -1,0 +1,53 @@
+{% extends "bootstrap/base.html" %}
+{% block content %}
+
+<div class="container">
+  <div class="jumbotron" style="background-color:#b22222  !important;">
+    <h1 tyle="color:#000000;">Wine Rating Predictor</h1>      
+      <p>Using Machine Learning to predict Wine Ratings</p>
+    
+    </div>        
+
+</div>
+<div class="card text-center">
+    <div class="card-header">
+      Results
+    </div>
+    <div class="card-body" style="background-color:#b22222;">
+      <h5 class="card-title">Given Description</h5>
+      <hr/>
+      <p class="card-text"><div class="alert alert-danger" role="alert">
+    {{ name }}
+  </div></p>
+
+    {% if prediction == 1 %}
+    <p>Under Average Wine</p>
+
+    {% elif prediction == 2 %}
+    <p>Average Wine</p>
+
+    {% elif prediction == 3 %}
+    <p>Good Wine</p>
+
+    {% elif prediction == 4 %}
+    <p>Very Good Wine</p>
+
+    {% elif prediction == 5 %}
+    <p>Excellent wine</p>
+
+    {% endif%}
+</div>
+
+<!-- Main ML Prediction Display Ends Here -->
+<div class="card-footer text-muted">
+   
+</div>
+</div>
+
+{% endblock %}
+
+{% block styles %}
+{{super()}} <!-- Allows Javascripts and other styles to be inclusive in bootstrap -->
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='css/styles.css')}}">
+{% endblock %}
